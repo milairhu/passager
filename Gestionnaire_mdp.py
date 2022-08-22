@@ -23,6 +23,8 @@ json.dump(monDico, monFichier) : ecrire
 
 def handle_psw():
 
+
+
     site = ligneEdit.get().lower()
 
     try:
@@ -58,7 +60,7 @@ def handle_psw():
         varOut1.set('Mot de passe existant : ')
         varOut2.set(str)
 
-    else:  # il faut générer un mdp
+    elif site!="":  # il faut générer un mdp
 
         """
         Un bon mot de passe doit contenir au moins 12 caractères et 4 types différents : 
