@@ -10,8 +10,9 @@ Les mots de passe sont stockés dans un fichier au format json.
 Possibilités d'amélioration : utiliser une clé pour encoder et décoder les mots de passe sur le fichier json ou le fichier.
 
 """
-
+import os
 from tkinter import *
+from cryptography.fernet import Fernet
 
 import json
 """
@@ -19,44 +20,60 @@ data = json.load(mon_fichier) : lire
 
 json.dump(monDico, monFichier) : ecrire
 """
+# Génère une clé pour le chiffrement
+def generate_key():
+    return Fernet.generate_key()
+
+# Chiffre les données avec la clé
+def encrypt_data(key, data):
+    cipher = Fernet(key)
+    encrypted_data = cipher.encrypt(data.encode())
+    return encrypted_data
+
+# Déchiffre les données avec la clé
+def decrypt_data(key, encrypted_data):
+    cipher = Fernet(key)
+    decrypted_data = cipher.decrypt(encrypted_data).decode()
+    return decrypted_data
 
 
 def handle_psw():
-
-
-
     site = ligneEdit.get().lower()
 
-    try:
-        fichier = open("psw.json", "r+")
+    encrypted_file_name = "psw.json"
+    key_file_name = "encryption_key.key"
 
+    if not os.path.exists(encrypted_file_name):
+        # Si les fichiers n'existent pas
+        # Crée fichier clé
+        key = generate_key()
+        with open(key_file_name, 'wb') as key_file:
+            key_file.write(key)
+        # Crée fichier json
+        new_empty_data = {}
+        s = json.dumps(new_empty_data)
+        encrypted_data = encrypt_data(key, s)
+        with open(encrypted_file_name, "wb") as file:
+            file.write(encrypted_data)
 
-    except:
-        fichier = open("psw.json", "w")
-        fichier.write("{\n}")
-        fichier.close()
-        fichier = open("psw.json", "r+")
+    # Ouvre les fichiers
+    with open(key_file_name, 'rb') as key_file:
+        key = key_file.read()
 
-    data = json.load(fichier)
+    with open(encrypted_file_name, 'rb') as file:
+        encrypted_data = file.read()
+
+    # Déchiffre les données
+    decrypted_data = decrypt_data(key, encrypted_data)
+
+    # Charger les données JSON décryptées
+    data = json.loads(decrypted_data)
 
     existe = data.get(site, "nil")
 
-    if existe != "nil":  # ok
-        #il faut décoder le code du fichier
+    if existe != "nil":
+        #le lien entré a déjà un mot de passe associé
         str=data[site]
-        posElt = 0
-        for elt in data.keys():
-            if elt==site:
-                break
-            else :
-                posElt+=1
-
-        #A COMPLETER : réécrire chaque lettre avec grâce à clé inversée
-        #res=""
-        #for c in str:
-        #    res+=c-12*posElt-5
-
-
         varOut1.set('Mot de passe existant : ')
         varOut2.set(str)
 
@@ -70,12 +87,13 @@ def handle_psw():
         import string
         import secrets
 
+        #Génération du mdp grâce aux librairies spécialisées
         str = ""
         maj, minus, chiffre, speciaux = False, False, False, False
         voc = string.ascii_letters + string.digits + "!*?#%_$&/<>"
 
         while not (len(str) >= 12 and (maj and minus and chiffre and speciaux)):
-            car = secrets.choice(voc)
+            car = secrets.choice(voc) #Choix d'un
             str += car
 
             if car.islower():
@@ -87,27 +105,21 @@ def handle_psw():
             else:
                 speciaux = True
 
-        #On encode l'élément suivant une clé spécifique à chaque élément
-        #code=""
-        #for c in str:
-        #    code+= (c+12*(len(data)+5))%len(voc)  # len(data) réfère à la position que elt va occuper dans dictionnaire
-
         # Il faut enregistrer dans fichier :
         nvElt = {}
         nvElt[site] = str
 
-        data.update(nvElt)  # ajoute l'élément
-        #print(data)
+        data.update(nvElt)  # ajoute l'élément au json
 
         varOut1.set("Création d'un mot de passe "+" : ")
         varOut2.set(str)
-        fichier.seek(0)
-        json.dump(data, fichier)  # modifie fichier en mettant en JSON
+        encrypted_data = encrypt_data(key, json.dumps(data))
+        with open(encrypted_file_name, 'wb') as encrypted_file:
+            encrypted_file.write(encrypted_data)
 
-    fichier.close()
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+
+    # Affichage
 
     main_frame=Tk()
     main_frame.title("Gestionnaire de mots de passe")
@@ -125,6 +137,7 @@ if __name__ == '__main__':
     ligneEdit = Entry(inp, width=50, textvariable=varLigne)
     ligneEdit.pack(side=RIGHT)
     inp.pack(side=TOP, anchor=CENTER, pady=10)
+
     #### Label de sortie
     out = Frame(main_frame)
     varOut1=StringVar()
@@ -141,12 +154,7 @@ if __name__ == '__main__':
     bouton = Button(main_frame, text="Générer / Chercher le mdp", padx=50, pady=10, command=handle_psw)
     bouton.pack(side=TOP, anchor=CENTER)
 
-
-
-
-
     main_frame.mainloop()
-
 
 
 
