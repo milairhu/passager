@@ -13,10 +13,8 @@ Possibilités d'amélioration : utiliser une clé pour encoder et décoder les m
 import base64
 import os
 from tkinter import *
-from tkinter import simpledialog
 
 from cryptography.fernet import Fernet
-import hashlib
 import json
 
 from cryptography.hazmat.primitives import hashes
@@ -170,6 +168,7 @@ def display_main_frame():
     password_label.pack_forget()
     password_entry.pack_forget()
     password_button.pack_forget()
+    error_message.pack_forget()
 
     ## Affichage des nouveaux éléments
     
@@ -177,13 +176,53 @@ def display_main_frame():
     out.pack(side=TOP)
     bouton.pack(side=TOP, anchor=CENTER)
 
+def on_ok_button_click():
+    # Suppression des éléments de la page d'accueil
+    welcome_title.pack_forget()
+    info_label.pack_forget()
+    ok_button.pack_forget()
+
+    # Affichage des éléments pour saisie du mot de passe
+    password_label.pack()
+    password_entry.pack()
+    password_button.pack()
+
 if __name__ == '__main__':
 
     main_frame = Tk()
     main_frame.title("Gestionnaire de mots de passe")
     main_frame.resizable(height=FALSE, width=FALSE)
-    main_frame.geometry("450x150")
-    
+    #main_frame.geometry("450x150")
+
+    # Page d'accueil
+    welcome_title = Frame(main_frame)
+    welcome_title = Label(main_frame, text="Bienvenue!", font=("Helvetica", 24, "bold"))
+
+    info_label = Frame(main_frame)
+    info_label = Label(main_frame, text="Vous allez devoir entrer le mot de passe que vous utiliserez pour avoir accès à l'application. \nAttention, il doit être robuste et rester secret!")
+
+    ok_button = Frame(main_frame)
+    ok_button = Button(main_frame, text="Ok!", command=on_ok_button_click)
+
+    ## Entrée du mot de passe
+
+    #### Message d'erreur en cas de mot de passe incorrect
+    error_message = Frame(main_frame)
+    error_message = Label(main_frame, text="Mot de passe incorrect. Réessayez.", fg="red")
+
+    #### Pour saisie du mot de passe
+    varPsw = StringVar()
+    password_label = Frame(main_frame)
+    password_label = Label(main_frame, text="Entrez votre mot de passe:")
+
+    password_entry = Frame(main_frame)
+    password_entry = Entry(main_frame, show="*", textvariable=varPsw)
+
+    password_button = Frame(main_frame)
+    password_button = Button(main_frame, text="Se connecter", command=get_user_psw)
+
+    ## Fenêtre principale
+
     #### Ligne d'entrée URL
 
     inp = Frame(main_frame)
@@ -195,6 +234,7 @@ if __name__ == '__main__':
     ligneEdit.pack(side=RIGHT)
 
     #### Label de sortie URL
+
     out = Frame(main_frame)
     varOut1 = StringVar()
     varOut1.set("Lancez pour afficher le mot de passe : ")
@@ -209,27 +249,16 @@ if __name__ == '__main__':
     bouton = Button(main_frame, text="Générer / Chercher le mdp", padx=50, pady=10, command=handle_psw)
 
     
-    # Message d'erreur en cas de mot de passe incorrect
-    error_message = Frame(main_frame)
-    error_message = Label(main_frame, text="Mot de passe incorrect. Réessayez.", fg="red")
-
-    # Pour saisie du mot de passe
-    varPsw = StringVar()
-    password_label = Frame(main_frame)
-    password_label = Label(main_frame, text="Entrez votre mot de passe:")
-
-    password_entry = Frame(main_frame)
-    password_entry = Entry(main_frame, show="*", textvariable=varPsw)
-
-    password_button = Frame(main_frame)
-    password_button = Button(main_frame, text="Se connecter", command=get_user_psw)
-
-    
-
-    # Affichage des éléments pour saisie du mot de passe
-    password_label.pack()
-    password_entry.pack()
-    password_button.pack()
+    # On vérifie si psw.json existe déjà, si non, on afffiche la page d'accueil
+    if not os.path.exists(encrypted_file_name):
+        welcome_title.pack(side=TOP, anchor=CENTER, pady=10)
+        info_label.pack(side=TOP)
+        ok_button.pack(side=TOP, anchor=CENTER, pady=10)
+    else:
+        # Affichage des éléments pour saisie du mot de passe
+        password_label.pack()
+        password_entry.pack()
+        password_button.pack()
 
     
     main_frame.mainloop()
