@@ -159,22 +159,24 @@ def get_user_psw():
             if not goodPsw:
                 print(e)
                 # Mot de passe incorrect, affichez un message d'erreur
-                error_message.pack()
+                error_message.grid(row=1, column=0, columnspan=2, pady=5)
+                password_button.grid_forget()
+                password_button.grid(row = 2, column = 0, columnspan=2, pady=10) 
         
 
 def display_main_frame():
     
     #### Suppression des éléments pour saisie du mot de passe
-    password_label.pack_forget()
-    password_entry.pack_forget()
-    password_button.pack_forget()
-    error_message.pack_forget()
+    password_label.grid_forget()
+    password_entry.grid_forget()
+    password_button.grid_forget()
+    error_message.grid_forget()
 
     ## Affichage des nouveaux éléments
     
-    inp.pack(side=TOP, anchor=CENTER, pady=10)
+    inp.pack(side=TOP, anchor=CENTER, pady=10, padx=10)
     out.pack(side=TOP)
-    bouton.pack(side=TOP, anchor=CENTER)
+    bouton.pack(side=TOP, anchor=CENTER, pady=10)
 
 def on_ok_button_click():
     # Suppression des éléments de la page d'accueil
@@ -183,9 +185,9 @@ def on_ok_button_click():
     ok_button.pack_forget()
 
     # Affichage des éléments pour saisie du mot de passe
-    password_label.pack()
-    password_entry.pack()
-    password_button.pack()
+    password_label.grid(row=0, column=0, padx=10, pady=10)
+    password_entry.grid(row=0, column=1, padx=10, pady=10)
+    password_button.grid(row = 1, column = 0, columnspan=2, pady=10) 
 
 if __name__ == '__main__':
 
@@ -213,7 +215,7 @@ if __name__ == '__main__':
     #### Pour saisie du mot de passe
     varPsw = StringVar()
     password_label = Frame(main_frame)
-    password_label = Label(main_frame, text="Entrez votre mot de passe:")
+    password_label = Label(main_frame, text="Entrez votre mot de passe :")
 
     password_entry = Frame(main_frame)
     password_entry = Entry(main_frame, show="*", textvariable=varPsw)
@@ -256,9 +258,8 @@ if __name__ == '__main__':
         ok_button.pack(side=TOP, anchor=CENTER, pady=10)
     else:
         # Affichage des éléments pour saisie du mot de passe
-        password_label.pack()
-        password_entry.pack()
-        password_button.pack()
-
+        password_label.grid(row=0, column=0, padx=10, pady=10)
+        password_entry.grid(row=0, column=1, padx=10, pady=10)
+        password_button.grid(row = 1, column = 0, columnspan=2, pady=10) 
     
     main_frame.mainloop()
