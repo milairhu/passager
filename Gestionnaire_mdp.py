@@ -13,6 +13,7 @@ Possibilités d'amélioration : utiliser une clé pour encoder et décoder les m
 import base64
 import os
 from tkinter import *
+from tkinter import ttk
 
 from cryptography.fernet import Fernet
 import json
@@ -26,7 +27,7 @@ data = json.load(mon_fichier) : lire
 json.dump(monDico, monFichier) : ecrire
 """
 
-encrypted_file_name = "psw.json"
+encrypted_file_name = "psw"
 
 # Génère une clé pour le chiffrement
 def generate_key():
@@ -58,7 +59,7 @@ def get_key(psw):
     key = base64.urlsafe_b64encode(kdf.derive(psw.encode('utf-8')))
     return key
 
-
+#Genere ou trouve le mdp pour un site donné
 def handle_psw():
     key = get_key(varPsw.get())
     site = ligneEdit.get().lower()
@@ -124,16 +125,62 @@ def handle_psw():
         with open(encrypted_file_name, 'wb') as encrypted_file:
             encrypted_file.write(encrypted_data)
 
+# Ajoute ou met à jour le mdp pour un site donné
+def handle_man():
+    key = get_key(varPsw.get())
+    site = ligneEditMan.get().lower()
+    psw = lineOutMan.get()
+
+    with open(encrypted_file_name, 'rb') as file:
+        encrypted_data = file.read()
+
+    try:
+        # Déchiffre les données
+        decrypted_data = decrypt_data(key, encrypted_data)
+    except:
+        # Si l'utilisateur a rentré un mauvais mdp
+        return
+
+    # Charger les données JSON décryptées
+    data = json.loads(decrypted_data)
+
+    existe = data.get(site, "nil")
+
+    if existe != "nil" and psw != "":
+        # le lien entré a déjà un mot de passe associé
+        str = data[site]
+        varOut1Man.set("Mise à jour de l'ancien mot de passe ( " + str + " ) : ")
+        varOut2Man.set(psw)
+        # Enregistrer dans fichier :
+        nvElt = {}
+        nvElt[site] = psw
+
+        data.update(nvElt)  # ajoute l'élément au json
+        encrypted_data = encrypt_data(key, json.dumps(data))
+        with open(encrypted_file_name, 'wb') as encrypted_file:
+            encrypted_file.write(encrypted_data)
+
+    elif site != "" and psw != "": 
+        # on ajoute le mdp pour le nouveau site
+        varOut1Man.set("Ajout d'un nouveau mot de passe : ")
+        varOut2Man.set(psw)
+        # Enregistrer dans fichier :
+        nvElt = {}
+        nvElt[site] = psw
+
+        data.update(nvElt)  # ajoute l'élément au json
+        encrypted_data = encrypt_data(key, json.dumps(data))
+        with open(encrypted_file_name, 'wb') as encrypted_file:
+            encrypted_file.write(encrypted_data)
+
 
 def get_user_psw():
-    print("Fenêtre mdp\n")
     #Get user password
     entered_password = password_entry.get()
 
     if entered_password == "":
         return
     else : 
-        print("Mot de passe : " + entered_password + "\n")
         key = get_key(entered_password)
         # Vérifiez le mot de passe (remplacez ceci par votre propre logique)
         if not os.path.exists(encrypted_file_name):
@@ -157,7 +204,6 @@ def get_user_psw():
             display_main_frame()
         except Exception as e:
             if not goodPsw:
-                print(e)
                 # Mot de passe incorrect, affichez un message d'erreur
                 error_message.grid(row=1, column=0, columnspan=2, pady=5)
                 password_button.grid_forget()
@@ -173,10 +219,13 @@ def display_main_frame():
     error_message.grid_forget()
 
     ## Affichage des nouveaux éléments
-    
+    notebook.pack(fill='both', expand=True)
     inp.pack(side=TOP, anchor=CENTER, pady=10, padx=10)
     out.pack(side=TOP)
     bouton.pack(side=TOP, anchor=CENTER, pady=10)
+    inpMan.pack(side=TOP, anchor=CENTER, pady=10, padx=10)
+    outMan.pack(side=TOP)
+    boutonMan.pack(side=TOP, anchor=CENTER, pady=10)
 
 def on_ok_button_click():
     # Suppression des éléments de la page d'accueil
@@ -225,9 +274,20 @@ if __name__ == '__main__':
 
     ## Fenêtre principale
 
-    #### Ligne d'entrée URL
+    #### Création des onglets
+    notebook = ttk.Notebook(main_frame)
 
-    inp = Frame(main_frame)
+    generation_frame = Frame(notebook)
+    manual_frame = Frame(notebook)
+
+    notebook.add(generation_frame, text="Génération / Gestion")
+    notebook.add(manual_frame, text="Ajout Manuel / Mise à Jour ")
+
+    #### Génération / Gestion
+
+    ##### Ligne d'entrée génération
+
+    inp = Frame(generation_frame)
 
     labelIn = Label(inp, text="Entrez l'URL du site : ")
     labelIn.pack(side=LEFT)
@@ -235,9 +295,9 @@ if __name__ == '__main__':
     ligneEdit = Entry(inp, width=50, textvariable=varLigne)
     ligneEdit.pack(side=RIGHT)
 
-    #### Label de sortie URL
+    ##### Label de sortie génération
 
-    out = Frame(main_frame)
+    out = Frame(generation_frame)
     varOut1 = StringVar()
     varOut1.set("Lancez pour afficher le mot de passe : ")
     labelOut = Label(out, textvariable=varOut1, pady=15)
@@ -246,18 +306,46 @@ if __name__ == '__main__':
     lineOut = Entry(out, textvariable=varOut2)
     lineOut.pack(side=RIGHT)
 
-    #### Bouton validation URL
-    bouton = Frame(main_frame)
-    bouton = Button(main_frame, text="Générer / Chercher le mdp", padx=50, pady=10, command=handle_psw)
+    ##### Bouton validation génération
+    bouton = Frame(generation_frame)
+    bouton = Button(generation_frame, text="Générer / Chercher le mot de passe", padx=50, pady=10, command=handle_psw)
 
+    #### Ajout Manuel / Mise à Jour
+
+    ##### Ligne d'entrée de l'URL
+
+    inpMan = Frame(manual_frame)
+
+    labelInMan = Label(inpMan, text="Entrez l'URL du site : ")
+    labelInMan.pack(side=LEFT)
+    varURLMan = StringVar()
+    ligneEditMan = Entry(inpMan, width=50, textvariable=varURLMan)
+    ligneEditMan.pack(side=RIGHT)
+
+    ##### Label de sortie URL
+
+    outMan = Frame(manual_frame)
+    varOut1Man = StringVar()
+    varOut1Man.set("Entrez le mot de passe à enregistrer : ")
+    labelOutMan = Label(outMan, textvariable=varOut1Man, pady=15)
+    labelOutMan.pack(side=LEFT)
+    varOut2Man = StringVar()
+    lineOutMan = Entry(outMan, textvariable=varOut2Man)
+    lineOutMan.pack(side=RIGHT)
+
+    ##### Bouton validation génération
+    boutonMan = Frame(manual_frame)
+    boutonMan = Button(manual_frame, text="Créer / Mettre à jour le mot de passe", padx=50, pady=10, command=handle_man)
     
-    # On vérifie si psw.json existe déjà, si non, on afffiche la page d'accueil
+    
+    # On vérifie si le fichier psw existe déjà, si non, on afffiche la page d'accueil
     if not os.path.exists(encrypted_file_name):
         welcome_title.pack(side=TOP, anchor=CENTER, pady=10)
         info_label.pack(side=TOP)
         ok_button.pack(side=TOP, anchor=CENTER, pady=10)
     else:
         # Affichage des éléments pour saisie du mot de passe
+        
         password_label.grid(row=0, column=0, padx=10, pady=10)
         password_entry.grid(row=0, column=1, padx=10, pady=10)
         password_button.grid(row = 1, column = 0, columnspan=2, pady=10) 
