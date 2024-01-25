@@ -1,4 +1,4 @@
-# Gestionnaire de Mots de Passe
+# Passager (Password Manager)
 
 Ce projet est un gestionnaire de mots de passe simple et efficace, construit avec Python et Tkinter. Il permet de générer des mots de passe sécurisés pour différents sites et de les stocker de manière sécurisée. L'utilisateur peut aussi y renseigner ses propres mots de passe ou modifier les mots de passe générés.
 
