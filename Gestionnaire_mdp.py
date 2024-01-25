@@ -1,14 +1,14 @@
 """
-Générateur de mots de passe :
+Générateur et gestionnaire de mots de passe :
 
-L'utilisateur rentre l'URL du site sur lequel il veut créer un mot de passe ou retrouver son mot de passe.
+Deux fonctionnalités :
+
+1) Génération : l'utilisateur rentre l'URL du site sur lequel il veut créer un mot de passe ou retrouver son mot de passe.
 
     -   si le mot de passe pour ce site existe déjà : l'affiche à l'utilisateur
     -   sinon : crée un mot de passe et l'affiche
-
-Les mots de passe sont stockés dans un fichier au format json.
-Possibilités d'amélioration : utiliser une clé pour encoder et décoder les mots de passe sur le fichier json ou le fichier.
-
+2) Ajout manuel : de la même manière, l'utilisateur peut soit même modifier ou ajouter des mots de passes manuellement.
+Les mots de passe sont stockés dans un fichier au format json, chiffré par son mot de passe principal.
 """
 import base64
 import os
@@ -21,13 +21,9 @@ import json
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-"""
-data = json.load(mon_fichier) : lire
-
-json.dump(monDico, monFichier) : ecrire
-"""
 
 encrypted_file_name = "psw"
+max_attempt = 5
 
 # Génère une clé pour le chiffrement
 def generate_key():
@@ -76,12 +72,12 @@ def handle_psw():
 
     # Charger les données JSON décryptées
     data = json.loads(decrypted_data)
-
-    existe = data.get(site, "nil")
+    print(data)
+    existe = data["data"].get(site, "nil")
 
     if existe != "nil":
         # le lien entré a déjà un mot de passe associé
-        str = data[site]
+        str = data["data"][site]
         varOut1.set('Mot de passe existant : ')
         varOut2.set(str)
 
@@ -117,7 +113,7 @@ def handle_psw():
         nvElt = {}
         nvElt[site] = str
 
-        data.update(nvElt)  # ajoute l'élément au json
+        data["data"].update(nvElt)  # ajoute l'élément au json
 
         varOut1.set("Création d'un mot de passe " + " : ")
         varOut2.set(str)
@@ -144,18 +140,20 @@ def handle_man():
     # Charger les données JSON décryptées
     data = json.loads(decrypted_data)
 
-    existe = data.get(site, "nil")
+    print(data)
+
+    existe = data["data"].get(site, "nil")
 
     if existe != "nil" and psw != "":
         # le lien entré a déjà un mot de passe associé
-        str = data[site]
+        str = data["data"][site]
         varOut1Man.set("Mise à jour de l'ancien mot de passe ( " + str + " ) : ")
         varOut2Man.set(psw)
         # Enregistrer dans fichier :
         nvElt = {}
         nvElt[site] = psw
 
-        data.update(nvElt)  # ajoute l'élément au json
+        data["data"].update(nvElt)  # ajoute l'élément au json
         encrypted_data = encrypt_data(key, json.dumps(data))
         with open(encrypted_file_name, 'wb') as encrypted_file:
             encrypted_file.write(encrypted_data)
@@ -168,12 +166,13 @@ def handle_man():
         nvElt = {}
         nvElt[site] = psw
 
-        data.update(nvElt)  # ajoute l'élément au json
+        data["data"].update(nvElt)  # ajoute l'élément au json
         encrypted_data = encrypt_data(key, json.dumps(data))
         with open(encrypted_file_name, 'wb') as encrypted_file:
             encrypted_file.write(encrypted_data)
 
 
+# Vérifie le mot de passe entré par l'utilisateur
 def get_user_psw():
     #Get user password
     entered_password = password_entry.get()
@@ -184,9 +183,10 @@ def get_user_psw():
         key = get_key(entered_password)
         # Vérifiez le mot de passe (remplacez ceci par votre propre logique)
         if not os.path.exists(encrypted_file_name):
-            # Si les fichiers n'existent pas
+            # Si le fichier n'existent pas
             # Crée fichier json
             new_empty_data = {}
+            new_empty_data["data"] = {}
             s = json.dumps(new_empty_data)
             encrypted_data = encrypt_data(key, s)
             with open(encrypted_file_name, "wb") as file:
@@ -227,6 +227,7 @@ def display_main_frame():
     outMan.pack(side=TOP)
     boutonMan.pack(side=TOP, anchor=CENTER, pady=10)
 
+# Handle the click on the ok button on the welcome page
 def on_ok_button_click():
     # Suppression des éléments de la page d'accueil
     welcome_title.pack_forget()
@@ -250,10 +251,10 @@ if __name__ == '__main__':
     welcome_title = Label(main_frame, text="Bienvenue!", font=("Helvetica", 24, "bold"))
 
     info_label = Frame(main_frame)
-    info_label = Label(main_frame, text="Vous allez devoir entrer le mot de passe que vous utiliserez pour avoir accès à l'application. \nAttention, il doit être robuste et rester secret!")
+    info_label = Label(main_frame, text="Vous allez devoir entrer le mot de passe que vous utiliserez pour avoir accès à l'application. \nAttention, il doit être robuste et rester secret ! \nEt si vous l'oubliez, vous ne pourrez plus accéder à vos mots de passe.")
 
     ok_button = Frame(main_frame)
-    ok_button = Button(main_frame, text="Ok!", command=on_ok_button_click)
+    ok_button = Button(main_frame, text="Ok !", command=on_ok_button_click)
 
     ## Entrée du mot de passe
 
@@ -348,6 +349,6 @@ if __name__ == '__main__':
         
         password_label.grid(row=0, column=0, padx=10, pady=10)
         password_entry.grid(row=0, column=1, padx=10, pady=10)
-        password_button.grid(row = 1, column = 0, columnspan=2, pady=10) 
+        password_button.grid(row = 1, column = 0, columnspan=2, pady=10)
     
     main_frame.mainloop()
