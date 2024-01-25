@@ -73,7 +73,6 @@ def handle_psw():
 
     # Charger les données JSON décryptées
     data = json.loads(decrypted_data)
-    print(data)
     existe = data["data"].get(site, "nil")
 
     if existe != "nil":
@@ -140,8 +139,6 @@ def handle_man():
 
     # Charger les données JSON décryptées
     data = json.loads(decrypted_data)
-
-    print(data)
 
     existe = data["data"].get(site, "nil")
 
