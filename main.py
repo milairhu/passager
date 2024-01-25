@@ -9,6 +9,7 @@ Deux fonctionnalités :
     -   sinon : crée un mot de passe et l'affiche
 2) Ajout manuel : de la même manière, l'utilisateur peut soit même modifier ou ajouter des mots de passes manuellement.
 Les mots de passe sont stockés dans un fichier au format json, chiffré par son mot de passe principal.
+
 """
 import base64
 import os
