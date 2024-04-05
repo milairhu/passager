@@ -10,10 +10,10 @@ Ce projet est un gestionnaire de mots de passe simple et efficace, construit ave
 
 ## Installation
 
-1. Clonez ce dépôt sur votre machine locale : `git clone https://github.com/milairhu/passager.git`
-2. Assure-vous d'avoir Python 3 installé sur votre machine.
-3. Installez les dépendances avec la commande `pip install -r requirements.txt`.
-4. Exécutez le fichier `main.py` pour lancer l'application.
+1. Cloner ce dépôt sur la machine : `git clone https://github.com/milairhu/passager.git`
+2. Avoir Python3 installé sur votre machine.
+3. Installer les dépendances avec la commande `pip install -r requirements.txt`.
+4. Exécuter le fichier `main.py` pour lancer l'application.
 
 ## Utilisation
 
